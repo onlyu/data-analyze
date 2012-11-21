@@ -3,6 +3,6 @@ static/tmp/
 config/client_session_key.aes
 *.hi
 *.o
-*.sqlite3
+*.db3
 cabal-dev
 .static-cache
