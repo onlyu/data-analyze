@@ -3,6 +3,7 @@
 
 import Yesod
 import Data.Text (Text)
+import Data.DateTime
 import Database.Persist.Sqlite
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persist|
@@ -12,11 +13,11 @@ Person
   age Int Gt Desc
   deriving Show
 Action
-  uri Text
-  action Text
-  time Int
+  name Text
+  event Text
+  time DateTime
   uid Int
-  serverId Int
+  server Text
   grade Int
   deriving Show
 |]
@@ -27,7 +28,7 @@ mkYesod "HelloWorld" [parseRoutes|
                       / HomeR GET
                       /person/#Text PersonR GET
                       /person_persist/#PersonId PersonPersistR GET
-                      /action/#Text/#Text/#Int/#Int/#Int/#Int ActionR GET
+                      /action/#Text/#Text/#Integer/#Int/#Text/#Int ActionR GET
                       /all_action AllActionR GET
                       |]
 
@@ -51,14 +52,15 @@ getPersonPersistR personId = do
   person <- runDB $ get404 personId
   return $ RepPlain $ toContent $ show person
 
-getActionR :: Text -> Text -> Int -> Int -> Int -> Int -> Handler RepPlain
-getActionR uri action time uid sid grade = do
-  actionId <- runDB $ insert (Action uri action time uid sid grade)
-  return $ RepPlain $ toContent $ show actionId 
+getActionR :: Text -> Text -> Integer -> Int -> Text -> Int -> Handler RepPlain
+getActionR uri action time uid server grade = do
+  actionId <- runDB $ insert (Action uri action (fromSeconds time) uid server grade)
+  return $ RepPlain $ toContent $ show actionId
 
 getAllActionR :: Handler RepPlain
 getAllActionR = do
-  return $ RepPlain $ toContent $ show "test"
+  actions <- runDB $ selectList [] [Desc ActionTime]
+  return $ RepPlain $ toContent $ show actions
 
 openConnectionCount :: Int
 openConnectionCount = 10
